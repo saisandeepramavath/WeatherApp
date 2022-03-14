@@ -1,0 +1,55 @@
+name: Deploy
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: gh-pages-deploy
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: npm
+
+      # Fail loudly rather than shipping a build with an empty key, which
+      # renders the page with a blank temperature and no error.
+      - name: Require the API key
+        run: |
+          if [ -z "${{ secrets.REACT_APP_OWM_API_KEY }}" ]; then
+            echo "::error::REACT_APP_OWM_API_KEY is not set. Add it under Settings > Secrets and variables > Actions."
+            exit 1
+          fi
+
+      - run: npm install --legacy-peer-deps
+
+      - name: Build
+        env:
+          CI: false
+          # No source map: it would republish the original source publicly.
+          GENERATE_SOURCEMAP: false
+          REACT_APP_OWM_API_KEY: ${{ secrets.REACT_APP_OWM_API_KEY }}
+        run: npm run build
+
+      - name: Publish to gh-pages
+        run: |
+          cd build
+          git init -q -b gh-pages
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -q -m "Deploy ${GITHUB_SHA::7}"
+          git push -f "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" gh-pages
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
