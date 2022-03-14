@@ -16,7 +16,7 @@ function Weathercomponent() {
         const api_key = process.env.REACT_APP_OWM_API_KEY;
         setTimeout(()=>{
         if(latitude!=null && longitude!=null){
-        fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${latitude}&lon=${longitude}&appid=${api_key}&units=metric&lang=us`).then(res=>res.json()).then(data=>{console.log(data.main.temp); setTemperature(Math.round(data.main.temp)); setCity(data.name)}).catch(err=>console.log(err)).finally(()=>setLoading(false))
+        fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${latitude}&lon=${longitude}&appid=${api_key}&units=metric&lang=en`).then(res=>res.json()).then(data=>{console.log(data.main.temp); setTemperature(Math.round(data.main.temp)); setCity(data.name)}).catch(err=>console.log(err)).finally(()=>setLoading(false))
         console.log(latitude,longitude);
         }
     },3000)
